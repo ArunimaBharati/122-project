@@ -1,79 +1,45 @@
-x = 0;
-y = 0;
 
-screen_width=0;
-screen_heigth=0;
-speak_data="";
-to_number=0;
-apple="";
 
-draw_apple = "";
+difference=0;
+rightWristX=0;
+leftWristX=0;
 
-var SpeechRecognition = window.webkitSpeechRecognition;
-  
-var recognition = new SpeechRecognition();
-
-function preload()
+function setup()
 {
-  apple=loadImage("apple.png");
+    video=createCapture(VIDEO);
+    video.size(550,500);
+
+    canvas=createCanvas(550,550);
+    canvas.position(560,150);
+
+    poseNet=ml5.poseNet(video,modelLoaded);
+    poseNet.on('pose',gotPoses);
 }
 
-function start()
+function modelLoaded()
 {
-  document.getElementById("status").innerHTML = "System is listening please speak";  
-  recognition.start();
-} 
- 
-recognition.onresult = function(event) {
+    console.log('poseNet is intialised');
+}
 
- console.log(event); 
-
- content = event.results[0][0].transcript;
-
-    document.getElementById("status").innerHTML = "The speech has been recognized: " + content; 
-    to_number=Number(content);
-    if(Number.isInteger(to_number))
+function gotPoses(results)
+{
+    if(results.length>0)
     {
-      document.getElementById("status").innerHTML = "Started drawing apple ";
-      draw_apple="set";
+        console.log(results);
+
+        leftWristX=results[0].pose.leftWrist.x;
+        rightWristX=results[0].pose.rightWrist.x;
+
+        difference=floor(leftWristX-rightWristX);
+        
     }
-
-    else{
-      document.getElementById("status").innerHTML = "The speech has been not recognized: "; 
-    }
-
 }
 
-function setup() {
-  screen_width=window.innerWidth;
-  screen_heigth=window.innerHeight;
-  canvas=createCanvas(screen_width, screen_heigth-150);
-  canvas.position(0,150);
+function draw()
+{
+    background('#969A97');
+    document.getElementById("square_side").innerHTML="width and height of a square will be ="+difference+"px";
+    fill('#F90093');
+    textSize(difference);
+    text('Arunima Bharati',50,400)
 }
-
-function draw() {
-  if(draw_apple == "set")
-  {
-    for(var i=1;i<=to_number;i++)
-    {
-      x=Math.floor(Math.random()*700);
-      y=Math.floor(Math.random()*400);
-      image(apple,x,y,50,50);
-    }
-    document.getElementById("status").innerHTML = to_number + " Apples drawn";
-     speak_data = to_number + "Apples drawn";
-      speak();
-       draw_apple = "";
-  }
-}
-
-function speak(){
-    var synth = window.speechSynthesis;
-
-    var utterThis = new SpeechSynthesisUtterance(speak_data);
-
-    synth.speak(utterThis);
-
-    speak_data = "";
-}
-
